@@ -25,7 +25,7 @@ In order to run the Groupbuy Coordinator on your own bot, you'll have to edit th
 }
 ```
 **Token:** is available at https://discord.com/developers/applications/XXX/bot
-*Replace `XXX` with your bot's token*
+*Replace `XXX` with your Bot's ID*
 
 *To get User IDs, you must enable Developer Mode in `Settings -> Advanced -> Developer Mode`* 
 **Owner ID:** Right-click your own name in Discord -> `Copy ID`
