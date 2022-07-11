@@ -39,12 +39,12 @@ In order to run the Groupbuy Coordinator on your own bot, you'll have to edit th
 
 To enable */commands*, run 
 ```javascript
-node .\register.js
+node register.js
 ```
 
 Then to bring the bot to life, run
 ```javascript
-node .\groupbuy.js
+node groupbuy.js
 ```
 
 This command will need to remain running for the bot to function.
