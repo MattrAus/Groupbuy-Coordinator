@@ -1,0 +1,28 @@
+{
+  "name": "groupbuy-coordinator",
+  "version": "1.0.0",
+  "description": "Discord Bot to assist in multi-user donations for a singular item.",
+  "main": "groupbuy.js",
+  "scripts": {
+    "register": "node register.js",
+    "run": "node groupbuy.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MattrAus/Groupbuy-Coordinator.git"
+  },
+  "author": "Mattr (me@mattr.website)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MattrAus/Groupbuy-Coordinator/issues"
+  },
+  "homepage": "https://github.com/MattrAus/Groupbuy-Coordinator#readme",
+  "dependencies": {
+    "@discordjs/builders": "^0.15.0",
+    "@discordjs/rest": "^0.5.0",
+    "currency.js": "^2.0.4",
+    "discord-api-types": "^0.36.1",
+    "discord.js": "^13.8.1",
+    "sequelize": "^6.21.2"
+  }
+}

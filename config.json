@@ -1,4 +1,5 @@
 {
-	"token": "https://discord.com/developers/applications/XXX/bot",
-	"bot_owner_id": "XXX"
+	"token": "TOKEN",
+	"bot_owner_id": "OWNER_ID",
+	"bot_id": "BOT_ID"
 }

@@ -193,7 +193,7 @@ for (const file of commandFiles) {
 }
 
 client.once('ready', async () => {
-	console.log('info', "Ready!");
+	console.log("Ready!");
 	sequelize.sync();
 });
 
