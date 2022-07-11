@@ -50,6 +50,15 @@ node groupbuy.js
 This command will need to remain running for the bot to function.
 *I'd recommend installing a process manager like [PM2](https://discordjs.guide/improving-dev-environment/pm2.html#installation)*
 
+
+Now you can invite the bot to your server
+
+```
+https://discord.com/login?redirect_to=/oauth2/authorize?client_id=XXX&permissions=8&scope=bot%20applications.commands
+```
+
+*Replace `XXX` with your Bot's ID*
+
 ---
 
 ## Development
