@@ -509,7 +509,7 @@ client.on('messageUpdate', async (oldMessage, message) => {
 			});
 
 
-			if (currency(groupbuy.pledged).value >= currency(groupbuy.price).value) {
+			if (currency(groupbuy.pledged).value >= currency(groupbuy.price).value || currency(groupbuy.pledged).value >= currency(groupbuy.open_at_amount).value) {
 				const guild = await client.guilds.fetch(groupbuy.guild_id);
 				const category_pledge = await guild.channels.fetch(groupbuy.category_pledge);
 				const channel_pledges = guild.channels.cache.get(groupbuy.channel_pledges);
