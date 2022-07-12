@@ -65,6 +65,14 @@ https://discord.com/oauth2/authorize?client_id=XXX&permissions=8&scope=bot%20app
 
 *Replace `XXX` with your Bot's ID*
 
+Once the bot is in your server, in chat type the following:
+
+```
+/create
+```
+
+This will completely wipe the server and generate new channels and roles - use with caution.
+
 ---
 
 ## Development
