@@ -204,6 +204,65 @@ client.on('guildMemberRemove', async member => {
 		}
 	});
 
+	if (member.partial || member.roles.cache.has(groupbuy.role_pledged) || member.roles.cache.has(groupbuy.role_paid)) {
+		let amount = currency(0);
+
+		if (member.partial || member.roles.cache.has(groupbuy.role_paid)) {
+			const channel = await client.channels.fetch(groupbuy.channel_paidscreenshot);
+			let lastMessageId = channel.lastMessageId;
+			let messages;
+
+			do {
+				messages = await channel.messages.fetch({
+					limit: 100,
+					before: lastMessageId,
+				});
+				messages = messages.filter(message => message.author.id === member.id);
+				for (let message_fetched of messages.values()) {
+					amount = amount.add(currency(message_fetched.content.split(' ')[0]));
+					lastMessageId = message_fetched.id;
+					await message_fetched.delete();
+				}
+			} while (messages.size == 100);
+
+			const channel_botchat = await client.channels.fetch(groupbuy.channel_botchat);
+			const embed = new Discord.MessageEmbed().setDescription(`${member.toString()}'s payment of ${currency(groupbuy.pledged).subtract(amount).format(true)} has been removed as they left the server.`).setColor('RED');
+			channel_botchat.send({ embeds: [embed] });
+
+
+			Groupbuys.update({ paid: amount.value }, { where: { guild_id: message.guildId } });
+			const channel_paidamount = await client.channels.fetch(groupbuy.channel_paidamount);
+			channel_paidamount.setName(`${amount.format(true)}/${currency(groupbuy.price).format(true)}`);
+		}
+		if (member.partial || member.roles.cache.has(groupbuy.role_pledged)) {
+			const channel = await client.channels.fetch(groupbuy.channel_pledges);
+			let lastMessageId = channel.lastMessageId;
+			let messages;
+
+			do {
+				messages = await channel.messages.fetch({
+					limit: 100,
+					before: lastMessageId,
+				});
+				messages = messages.filter(message => message.author.id === member.id);
+				for (let message_fetched of messages.values()) {
+					amount = amount.add(currency(message_fetched.content.split(' ')[0]));
+					lastMessageId = message_fetched.id;
+					await message_fetched.delete();
+				}
+			} while (messages.size == 100);
+
+			const channel_botchat = await client.channels.fetch(groupbuy.channel_botchat);
+			const embed = new Discord.MessageEmbed().setDescription(`${member.toString()}'s pledge of ${currency(groupbuy.pledged).subtract(amount).format(true)} has been removed as they left the server.`).setColor('RED');
+			channel_botchat.send({ embeds: [embed] });
+
+
+			Groupbuys.update({ pledged: amount.value }, { where: { guild_id: member.guild.id } });
+			const channel_pledgeamount = await member.guild.channels.fetch(groupbuy.channel_pledgeamount);
+			channel_pledgeamount.setName(`${amount.format(true)}/${currency(groupbuy.price).format(true)}`);
+		}
+	}
+
 	await increment_user(member, 'left');
 
 	const channel_membercount = await member.guild.channels.fetch(groupbuy.channel_membercount);
@@ -312,6 +371,14 @@ client.on('messageReactionAdd', async (reaction, user) => {
 });
 
 client.on('messageDelete', async message => {
+	if (!message.guild) return;
+
+	// Check if Bot deleted the message - we've probably already handled it elsewhere.
+	const fetchedLogs = await message.guild.fetchAuditLogs({ limit: 1, type: 'MESSAGE_DELETE', });
+	const deletionLog = fetchedLogs.entries.first();
+	const { executor, target } = deletionLog;
+	if (target.id === client.user.id) return;
+
 	const groupbuy = await Groupbuys.findOne({ where: { guild_id: message.guildId } });
 
 	if (message.partial) {
@@ -321,13 +388,9 @@ client.on('messageDelete', async message => {
 		if (message.channelId == groupbuy.channel_pledges) {
 			const channel = await client.channels.fetch(groupbuy.channel_pledges);
 			let lastMessageId = channel.lastMessageId;
-			let messages = await channel.messages.fetch({
-				limit: 100,
-				before: lastMessageId,
-			});
 
 			do {
-				messages = await channel.messages.fetch({
+				let messages = await channel.messages.fetch({
 					limit: 100,
 					before: lastMessageId,
 				});
@@ -350,13 +413,9 @@ client.on('messageDelete', async message => {
 		if (message.channelId == groupbuy.channel_paidscreenshot) {
 			const channel = await client.channels.fetch(groupbuy.channel_paidscreenshot);
 			let lastMessageId = channel.lastMessageId;
-			let messages = await channel.messages.fetch({
-				limit: 100,
-				before: lastMessageId,
-			});
 
 			do {
-				messages = await channel.messages.fetch({
+				let messages = await channel.messages.fetch({
 					limit: 100,
 					before: lastMessageId,
 				});
@@ -767,7 +826,7 @@ client.on('interactionCreate', async interaction => {
 			let length = interaction.fields.getTextInputValue('length').trim();
 			let price = interaction.fields.getTextInputValue('price').trim();
 			const additional = interaction.fields.getTextInputValue('additional').trim();
-			
+
 			// Tempory storage to be placed back in the Modal if needed.
 			temp_title[interaction.guild.id] = title;
 			temp_artist[interaction.guild.id] = artist;
@@ -828,7 +887,7 @@ client.on('interactionCreate', async interaction => {
 			});
 
 			const embed_creating = new Discord.MessageEmbed().setColor('GREEN').setDescription(`Creating groupbuy now...`);
-						
+
 			// We have to reply to interaction else it causes an "Error" on the Modal - wait so the user can see this reply.
 			interaction.reply({
 				embeds: [embed_creating],
@@ -1362,7 +1421,7 @@ client.on('interactionCreate', async interaction => {
 	}
 	if (interaction.isUserContextMenu()) {
 		if (interaction.commandName === 'Groupbuy Statistics') {
-			const member = await Users.findOne({ where: { user_id: interaction.targetUser.id }});
+			const member = await Users.findOne({ where: { user_id: interaction.targetUser.id } });
 			console.log(member);
 			const embed = new Discord.MessageEmbed().setColor('GREYPLE').setAuthor({ name: interaction.targetUser.username, iconURL: interaction.targetUser.avatarURL() });
 			if (member) {
@@ -1390,7 +1449,7 @@ client.on('interactionCreate', async interaction => {
 						case 'paid_amount':
 							embed.setDescription(`${embed.description ? embed.description : ''}` + `${inlineCode(`(${currency(value).format(true)})`)}`);
 							break;
-						case 'createdAt': 
+						case 'createdAt':
 							embed.setDescription(`${embed.description ? embed.description : ''}` + `\n${bold('Created')}: ${time(new Date(value))} `);
 							break;
 						default:

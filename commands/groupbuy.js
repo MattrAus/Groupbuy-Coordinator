@@ -56,7 +56,6 @@ const Groupbuys = sequelize.define('groupbuy', {
     role_paid: Sequelize.STRING,
     role_pledged: Sequelize.STRING,
     role_nopledge: Sequelize.STRING,
-    role_muted: Sequelize.STRING,
     channel_membercount: Sequelize.STRING,
     category_info: Sequelize.STRING,
     channel_information: Sequelize.STRING,
@@ -78,6 +77,7 @@ const Groupbuys = sequelize.define('groupbuy', {
     closedAt: Sequelize.DATE,
 
     // // Unused
+    // role_muted: Sequelize.STRING,
     // channel_faq: Sequelize.STRING,
     // channel_snippet: Sequelize.STRING,
 });
