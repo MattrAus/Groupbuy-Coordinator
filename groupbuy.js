@@ -805,6 +805,9 @@ client.on('interactionCreate', async interaction => {
 					});
 				}
 			}
+			else {
+				length = "N/A";
+			}
 
 			let groupbuy = await Groupbuys.findOne({
 				where: {
