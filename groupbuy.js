@@ -388,9 +388,10 @@ client.on('messageDelete', async message => {
 		if (message.channelId == groupbuy.channel_pledges) {
 			const channel = await client.channels.fetch(groupbuy.channel_pledges);
 			let lastMessageId = channel.lastMessageId;
+			let messages;
 
 			do {
-				let messages = await channel.messages.fetch({
+				messages = await channel.messages.fetch({
 					limit: 100,
 					before: lastMessageId,
 				});
@@ -413,9 +414,10 @@ client.on('messageDelete', async message => {
 		if (message.channelId == groupbuy.channel_paidscreenshot) {
 			const channel = await client.channels.fetch(groupbuy.channel_paidscreenshot);
 			let lastMessageId = channel.lastMessageId;
+			let messages;
 
 			do {
-				let messages = await channel.messages.fetch({
+				messages = await channel.messages.fetch({
 					limit: 100,
 					before: lastMessageId,
 				});
