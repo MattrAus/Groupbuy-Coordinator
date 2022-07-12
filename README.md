@@ -25,7 +25,15 @@ In order to run the Groupbuy Coordinator on your own bot, you'll have to edit th
 }
 ```
 **Token:** is available at https://discord.com/developers/applications/XXX/bot
+
 *Replace `XXX` with your Bot's ID*
+
+While you're here, you must enable Privileged Gateway Intents so you bot can utilise features of Discord.
+
+You must enable "SERVER MEMBERS INTENT" and "MESSAGE CONTENT INTENT".
+
+You can enable "PRESENCE INTENT" if you wish to program features to do with that.
+
 
 *To get User IDs, you must enable Developer Mode in `Settings -> Advanced -> Developer Mode`* 
 
@@ -53,7 +61,7 @@ This command will need to remain running for the bot to function.
 
 Now you can invite the bot to your server
 
-https://discord.com/login?redirect_to=/oauth2/authorize?client_id=XXX&permissions=8&scope=bot%20applications.commands
+https://discord.com/oauth2/authorize?client_id=XXX&permissions=8&scope=bot%20applications.commands
 
 *Replace `XXX` with your Bot's ID*
 
