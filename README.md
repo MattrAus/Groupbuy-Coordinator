@@ -71,8 +71,8 @@ Once the bot is in your server, in chat type the following:
 /create
 ```
 
-**This will completely wipe the server and generate new channels and roles - use with caution.
-**
+**This will completely wipe the server and generate new channels and roles - use with caution.**
+
 ---
 
 ## Development
