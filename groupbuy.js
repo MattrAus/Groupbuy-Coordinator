@@ -397,18 +397,18 @@ client.on('messageDelete', async message => {
 				if (message.channelId == groupbuy.channel_pledges) {
 					amount = await recountChannel(groupbuy.channel_pledges);
 
-					embed = new Discord.MessageEmbed().setDescription(`Unknown message was deleted, Verifed pledged amount as ${currency(amount).format(true)}`).setColor('GOLD');
+					embed = new Discord.MessageEmbed().setDescription(`Unknown message was deleted, Verifed pledged amount as ${amount.format(true)}`).setColor('GOLD');
 
-					Groupbuys.update({ paid: amount.value }, { where: { guild_id: message.guildId } });
+					await Groupbuys.update({ pledged: amount.value }, { where: { guild_id: message.guildId } });
 					const channel_pledgeamount = await client.channels.fetch(groupbuy.channel_pledgeamount);
 					channel_pledgeamount.setName(`${amount.format(true)}/${currency(groupbuy.price).format(true)}`);
 				}
 				if (message.channelId == groupbuy.channel_paidscreenshot) {
 					amount = await recountChannel(groupbuy.channel_pledges);
 
-					embed = new Discord.MessageEmbed().setDescription(`Unknown message was deleted, Verifed paid amount as ${currency(amount).format(true)}`).setColor('GREEN');
+					embed = new Discord.MessageEmbed().setDescription(`Unknown message was deleted, Verifed paid amount as ${amount.format(true)}`).setColor('GREEN');
 
-					Groupbuys.update({ paid: amount.value }, { where: { guild_id: message.guildId } });
+					await Groupbuys.update({ paid: amount.value }, { where: { guild_id: message.guildId } });
 					const channel_paidamount = await client.channels.fetch(groupbuy.channel_paidamount);
 					channel_paidamount.setName(`${amount.format(true)}/${currency(groupbuy.price).format(true)}`);
 				}
@@ -560,7 +560,6 @@ client.on('messageUpdate', async (oldMessage, message) => {
 
 			const test = await await increment_user(message.member, 'pledge_amount', amount);
 			await await increment_user(message.member, 'pledge');
-			console.log(test);
 
 			message.member.roles.add(groupbuy.role_pledged);
 			message.member.roles.remove(groupbuy.role_nopledge);
@@ -1413,7 +1412,6 @@ client.on('interactionCreate', async interaction => {
 		if (interaction.commandName === 'payment') {
 			const payments = await Payments.findAll({ where: { guild_id: interaction.guild.id } });
 
-			console.log(payments);
 			const focusedValue = interaction.options.getFocused();
 			const choices = payments.map(payment => `${payment.service}: ${payment.address}`);
 			const filtered = choices.filter(choice => choice.startsWith(focusedValue));
@@ -1425,7 +1423,7 @@ client.on('interactionCreate', async interaction => {
 	if (interaction.isUserContextMenu()) {
 		if (interaction.commandName === 'Groupbuy Statistics') {
 			const member = await Users.findOne({ where: { user_id: interaction.targetUser.id } });
-			console.log(member);
+
 			const embed = new Discord.MessageEmbed().setColor('GREYPLE').setAuthor({ name: interaction.targetUser.username, iconURL: interaction.targetUser.avatarURL() });
 			if (member) {
 				embed.setTitle(`Groupbuy Statistics`);
@@ -1488,7 +1486,6 @@ async function recountChannel(channelId) {
 			amount = amount.add(currency(message_fetched.content.split(' ')[0]));
 			lastMessageId = message_fetched.id;
 		}
-		console.log(messages.size);
 	} while (messages.size == 100);
 	return currency(amount);
 }
