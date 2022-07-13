@@ -197,7 +197,16 @@ client.once('ready', async () => {
 	sequelize.sync();
 });
 
+client.on('guildCreate', async guild => {
+	// Leave groupbuy if the owner isn't a coordinator or bot owner
+	const coordinator = await Coordinators.findOne({ where: { user_id: guild.ownerId, type: 'coordinator'} });
+	if (!coordinator && guild.ownerId != auth.bot_owner_id) return guild.leave();
+	
+});
+
 client.on('guildMemberRemove', async member => {
+	if (member.id == client.user.id) return;
+	
 	const groupbuy = await Groupbuys.findOne({
 		where: {
 			guild_id: member.guild.id
@@ -327,7 +336,7 @@ client.on('guildBanRemove', async (unban) => {
 client.on('guildMemberUpdate', async (_oldMember, newMember) => {
 
 	const groupbuy = await Groupbuys.findOne({ where: { guild_id: newMember.guild.id } });
-
+	if (!groupbuy) return;
 	if (newMember.roles.cache.has(groupbuy.role_coordinator)) await checkCoordinators(newMember);
 });
 
