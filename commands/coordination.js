@@ -104,9 +104,12 @@ module.exports = {
             .setDescription('Remove a user from the coordination/moderation list.')
             .addUserOption(option => option.setName('user').setRequired(true).setDescription('The user to remove from the coordination/moderation list.')))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-        .setDMPermission(false),
+        .setDMPermission(true),
     async execute(interaction) {
-        const groupbuy = await Groupbuys.findOne({ where: { guild_id: interaction.member.guild.id } });
+        let groupbuy;
+        if (interaction.member) {
+            groupbuy = await Groupbuys.findOne({ where: { guild_id: interaction.member.guild.id } });
+        }
         const user = interaction.options.getUser('user');
         const coordination = await Coordinators.findOne({ where: { user_id: user.id } });
         if (interaction.options.getSubcommand() === 'add') {
@@ -166,11 +169,12 @@ module.exports = {
                 });
 
             }
-
-            const role = `role_${type}`;
-            const member = await interaction.guild.members.fetch(user.id);
-            await member.roles.remove([groupbuy.role_coordinator, groupbuy.role_administrator, groupbuy.role_moderator]);
-            await member.roles.add(groupbuy[role]); 
+            if (groupbuy) {
+                const role = `role_${type}`;
+                const member = await interaction.guild.members.fetch(user.id);
+                await member.roles.remove([groupbuy.role_coordinator, groupbuy.role_administrator, groupbuy.role_moderator]);
+                await member.roles.add(groupbuy[role]);
+            }
         }
 
         else if (interaction.options.getSubcommand() === 'remove') {
@@ -196,8 +200,10 @@ module.exports = {
             interaction.reply({
                 embeds: [embed],
             });
-            const member = await interaction.guild.members.fetch(user.id);
-            await member.roles.remove([groupbuy.role_coordinator, groupbuy.role_administrator, groupbuy.role_moderator]);
+            if (groupbuy) {
+                const member = await interaction.guild.members.fetch(user.id);
+                await member.roles.remove([groupbuy.role_coordinator, groupbuy.role_administrator, groupbuy.role_moderator]);
+            }
         }
     }
 };
