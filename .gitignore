@@ -128,5 +128,3 @@ dist
 *.sqlite
 package-lock.json
 config.json
-config.json
-config.json
