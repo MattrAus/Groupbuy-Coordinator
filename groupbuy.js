@@ -199,14 +199,14 @@ client.once('ready', async () => {
 
 client.on('guildCreate', async guild => {
 	// Leave groupbuy if the owner isn't a coordinator or bot owner
-	const coordinator = await Coordinators.findOne({ where: { user_id: guild.ownerId, type: 'coordinator'} });
+	const coordinator = await Coordinators.findOne({ where: { user_id: guild.ownerId, type: 'coordinator' } });
 	if (!coordinator && guild.ownerId != auth.bot_owner_id) return guild.leave();
-	
+
 });
 
 client.on('guildMemberRemove', async member => {
 	if (member.id == client.user.id) return;
-	
+
 	const groupbuy = await Groupbuys.findOne({
 		where: {
 			guild_id: member.guild.id
@@ -381,66 +381,60 @@ client.on('messageReactionAdd', async (reaction, user) => {
 
 client.on('messageDelete', async message => {
 	if (!message.guild) return;
-
-	// Check if Bot deleted the message - we've probably already handled it elsewhere.
-	const fetchedLogs = await message.guild.fetchAuditLogs({ limit: 1, type: 'MESSAGE_DELETE', });
-	const deletionLog = fetchedLogs.entries.first();
-	const { executor, target } = deletionLog;
-	if (target.id === client.user.id) return;
-
 	const groupbuy = await Groupbuys.findOne({ where: { guild_id: message.guildId } });
+	const channel_botchat = await client.channels.fetch(groupbuy.channel_botchat);
 
 	if (message.partial) {
-		// return; // if you've restarted the bot, older messages aren't stored in cache anymore.
 		let amount = currency(0);
 
-		if (message.channelId == groupbuy.channel_pledges) {
-			const channel = await client.channels.fetch(groupbuy.channel_pledges);
-			let lastMessageId = channel.lastMessageId;
-			let messages;
+		if (message.channelId == groupbuy.channel_pledges || message.channelId == groupbuy.channel_paidscreenshot) {
+			const fetchedLogs = await message.guild.fetchAuditLogs({ limit: 1, type: 'MESSAGE_DELETE', });
+			const deletionLog = fetchedLogs.entries.first();
 
-			do {
-				messages = await channel.messages.fetch({
-					limit: 100,
-					before: lastMessageId,
-				});
-				for (let message_fetched of messages.values()) {
-					amount = amount.add(currency(message_fetched.content.split(' ')[0]));
-					lastMessageId = message_fetched.id;
+			// When we can't get message contents, we just have to check all messages.
+			if (!deletionLog) {
+				let embed = new Discord.MessageEmbed();
+				if (message.channelId == groupbuy.channel_pledges) {
+					amount = await recountChannel(groupbuy.channel_pledges);
+
+					embed = new Discord.MessageEmbed().setDescription(`Unknown message was deleted, Verifed pledged amount as ${currency(amount).format(true)}`).setColor('GOLD');
+
+					Groupbuys.update({ paid: amount.value }, { where: { guild_id: message.guildId } });
+					const channel_pledgeamount = await client.channels.fetch(groupbuy.channel_pledgeamount);
+					channel_pledgeamount.setName(`${amount.format(true)}/${currency(groupbuy.price).format(true)}`);
 				}
-				console.log(messages.size);
-			} while (messages.size == 100);
+				if (message.channelId == groupbuy.channel_paidscreenshot) {
+					amount = await recountChannel(groupbuy.channel_pledges);
 
-			const channel_botchat = await client.channels.fetch(groupbuy.channel_botchat);
+					embed = new Discord.MessageEmbed().setDescription(`Unknown message was deleted, Verifed paid amount as ${currency(amount).format(true)}`).setColor('GREEN');
+
+					Groupbuys.update({ paid: amount.value }, { where: { guild_id: message.guildId } });
+					const channel_paidamount = await client.channels.fetch(groupbuy.channel_paidamount);
+					channel_paidamount.setName(`${amount.format(true)}/${currency(groupbuy.price).format(true)}`);
+				}
+				return channel_botchat.send({ embeds: [embed] });
+			}
+			// Check if Bot deleted the message - we've probably already handled it elsewhere.
+			if (target.id === client.user.id) return;
+		}
+
+		// return; // if you've restarted the bot, older messages aren't stored in cache anymore.
+
+		if (message.channelId == groupbuy.channel_pledges) {
+			let amount = await recountChannel(groupbuy.channel_pledges);
+
 			const embed = new Discord.MessageEmbed().setDescription(`Unknown pledge of ${currency(groupbuy.pledged).subtract(amount).format(true)} has been removed.`).setColor('RED');
 			channel_botchat.send({ embeds: [embed] });
-
 
 			Groupbuys.update({ pledged: amount.value }, { where: { guild_id: message.guildId } });
 			const channel_pledgeamount = await message.guild.channels.fetch(groupbuy.channel_pledgeamount);
 			channel_pledgeamount.setName(`${amount.format(true)}/${currency(groupbuy.price).format(true)}`);
 		}
 		if (message.channelId == groupbuy.channel_paidscreenshot) {
-			const channel = await client.channels.fetch(groupbuy.channel_paidscreenshot);
-			let lastMessageId = channel.lastMessageId;
-			let messages;
+			let amount = await recountChannel(groupbuy.channel_paidscreenshot);
 
-			do {
-				messages = await channel.messages.fetch({
-					limit: 100,
-					before: lastMessageId,
-				});
-				for (let message_fetched of messages.values()) {
-					amount = amount.add(currency(message_fetched.content.split(' ')[0]));
-					lastMessageId = message_fetched.id;
-				}
-				console.log(messages.size);
-			} while (messages.size == 100);
-
-			const channel_botchat = await client.channels.fetch(groupbuy.channel_botchat);
 			const embed = new Discord.MessageEmbed().setDescription(`Unknown payment of ${currency(groupbuy.paid).subtract(amount).format(true)} has been removed.`).setColor('RED');
 			channel_botchat.send({ embeds: [embed] });
-
 
 			Groupbuys.update({ paid: amount.value }, { where: { guild_id: message.guildId } });
 			const channel_paidamount = await client.channels.fetch(groupbuy.channel_paidamount);
@@ -450,8 +444,6 @@ client.on('messageDelete', async message => {
 		return;
 	}
 	if (message.author.bot || message.channel.type == 'DM') return;
-
-	const channel_botchat = await message.guild.channels.fetch(groupbuy.channel_botchat);
 
 	if (message.channel.id == groupbuy.channel_pledges || message.channel.id == groupbuy.channel_paidscreenshot) {
 		const amount = currency(message.content.split(' ')[0]).value;
@@ -1480,6 +1472,26 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(auth.token);
+
+async function recountChannel(channelId) {
+	let amount = currency(0);
+	const channel = await client.channels.fetch(channelId);
+	let lastMessageId = channel.lastMessageId;
+	let messages;
+
+	do {
+		messages = await channel.messages.fetch({
+			limit: 100,
+			before: lastMessageId,
+		});
+		for (let message_fetched of messages.values()) {
+			amount = amount.add(currency(message_fetched.content.split(' ')[0]));
+			lastMessageId = message_fetched.id;
+		}
+		console.log(messages.size);
+	} while (messages.size == 100);
+	return currency(amount);
+}
 
 async function increment_user(member, type, amount) {
 	if (!amount) amount = 1;
