@@ -1504,7 +1504,7 @@ async function set_channel_paidamount(groupbuy, amount) {
 	let paid = currency(groupbuy.paid).value;
 	const price = currency(groupbuy.price).value;
 
-	paid = currency(paid).add(amount);
+	paid = currency(paid).add(amount).value;
 	groupbuy.update({ paid: paid });
 
 	const guild = await client.guilds.fetch(groupbuy.guild_id);
@@ -1517,7 +1517,7 @@ async function set_channel_pledgeamount(groupbuy, amount) {
 	let pledged = currency(groupbuy.pledged).value;
 	const price = currency(groupbuy.price).value;
 
-	pledged = currency(pledged).add(amount);
+	pledged = currency(pledged).add(amount).value;
 	groupbuy.update({ pledged: pledged });
 
 	const guild = await client.guilds.fetch(groupbuy.guild_id);
